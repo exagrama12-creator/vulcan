@@ -1165,6 +1165,151 @@
 </head>
 <body>
 
+<!-- ===== AUTH OVERLAY ===== -->
+<div id="auth-overlay" style="display:flex; position:fixed; top:0; left:0; right:0; bottom:0; z-index:500; background:var(--dark-forge); align-items:center; justify-content:center; flex-direction:column;">
+    <canvas id="auth-particles" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
+    
+    <div style="position:relative; z-index:1; width:90%; max-width:420px;">
+        <!-- Logo -->
+        <div style="text-align:center; margin-bottom:30px;">
+            <div style="font-size:60px; margin-bottom:12px; animation: hammerSwing 2s ease-in-out infinite;">🔨🔥</div>
+            <h1 style="font-size:32px; font-weight:900; background:linear-gradient(135deg, var(--fire-1), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:4px;">VULCAN</h1>
+            <p style="color:var(--metal-3); font-size:13px; letter-spacing:2px; margin-top:4px;">A FORJA DE APPS</p>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex; gap:4px; margin-bottom:20px; background:var(--dark-3); border-radius:12px; padding:4px;">
+            <button class="auth-tab-btn active" onclick="showAuthTab('login')" style="flex:1; padding:10px; border:none; border-radius:10px; background:var(--fire-2); color:white; font-weight:600; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s;">🔑 Login</button>
+            <button class="auth-tab-btn" onclick="showAuthTab('register')" style="flex:1; padding:10px; border:none; border-radius:10px; background:transparent; color:var(--metal-3); font-weight:600; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s;">📝 Cadastro</button>
+            <button class="auth-tab-btn" onclick="showAuthTab('recover')" style="flex:1; padding:10px; border:none; border-radius:10px; background:transparent; color:var(--metal-3); font-weight:600; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s;">🔓 Recuperar</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div class="auth-form" id="auth-login" style="background:var(--dark-3); border:1px solid rgba(255,107,53,0.2); border-radius:16px; padding:28px;">
+            <h2 style="font-size:20px; font-weight:700; color:var(--fire-1); margin-bottom:20px; text-align:center;">Entrar na Forja</h2>
+            
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">👤 Usuário</label>
+                <input type="text" id="login-user" placeholder="Seu usuário" onkeydown="handleAuthKey(event,'login')" style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">🔒 Senha</label>
+                <input type="password" id="login-pass" placeholder="Sua senha" onkeydown="handleAuthKey(event,'login')" style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div class="auth-error" id="login-error" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px;"></div>
+
+            <button onclick="doLogin()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg, var(--fire-1), var(--fire-2)); color:white; font-size:16px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s;">🔥 ENTRAR</button>
+
+            <p style="text-align:center; margin-top:16px; font-size:12px; color:var(--metal-3);">
+                Não tem conta? <a href="#" onclick="showAuthTab('register'); return false;" style="color:var(--fire-1); text-decoration:none;">Cadastre-se</a> | 
+                <a href="#" onclick="showAuthTab('recover'); return false;" style="color:var(--fire-1); text-decoration:none;">Esqueci a senha</a>
+            </p>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div class="auth-form" id="auth-register" style="display:none; background:var(--dark-3); border:1px solid rgba(255,107,53,0.2); border-radius:16px; padding:28px; max-height:65vh; overflow-y:auto;">
+            <h2 style="font-size:20px; font-weight:700; color:var(--fire-1); margin-bottom:20px; text-align:center;">Criar Conta</h2>
+            
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">😊 Nome</label>
+                <input type="text" id="reg-name" placeholder="Seu nome" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">📧 Email</label>
+                <input type="email" id="reg-email" placeholder="seu@email.com" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">👤 Usuário</label>
+                <input type="text" id="reg-user" placeholder="Mínimo 3 caracteres" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">🔒 Senha</label>
+                <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">🔒 Confirmar Senha</label>
+                <input type="password" id="reg-pass2" placeholder="Repita a senha" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">❓ Pergunta de Segurança</label>
+                <input type="text" id="reg-question" placeholder="Ex: Nome do seu pet?" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:18px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">💬 Resposta</label>
+                <input type="text" id="reg-answer" placeholder="Resposta secreta" onkeydown="handleAuthKey(event,'register')" style="width:100%; padding:11px 14px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div class="auth-error" id="reg-error" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px;"></div>
+
+            <button onclick="doRegister()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg, var(--fire-1), var(--fire-2)); color:white; font-size:16px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;">📝 CRIAR CONTA</button>
+
+            <p style="text-align:center; margin-top:14px; font-size:12px; color:var(--metal-3);">
+                Já tem conta? <a href="#" onclick="showAuthTab('login'); return false;" style="color:var(--fire-1); text-decoration:none;">Faça login</a>
+            </p>
+        </div>
+
+        <!-- RECOVER FORM -->
+        <div class="auth-form" id="auth-recover" style="display:none; background:var(--dark-3); border:1px solid rgba(255,107,53,0.2); border-radius:16px; padding:28px;">
+            <h2 style="font-size:20px; font-weight:700; color:var(--fire-1); margin-bottom:20px; text-align:center;">Recuperar Senha</h2>
+            
+            <!-- Step 1: Identificação -->
+            <div id="recover-step1">
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">👤 Usuário ou Email</label>
+                    <input type="text" id="recover-user" placeholder="Digite seu usuário ou email" style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+                </div>
+                <button onclick="doRecoveryStep1()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg, var(--fire-1), var(--fire-2)); color:white; font-size:16px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;">🔍 Buscar Conta</button>
+            </div>
+
+            <!-- Step 2: Pergunta de segurança -->
+            <div id="recover-step2" style="display:none;">
+                <div style="background:rgba(255,107,53,0.1); border:1px solid rgba(255,107,53,0.2); border-radius:10px; padding:14px; margin-bottom:16px;">
+                    <p style="font-size:12px; color:var(--metal-3); margin-bottom:4px;">Pergunta de segurança:</p>
+                    <p style="font-size:15px; font-weight:600; color:var(--fire-1);" id="recover-question-text"></p>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">💬 Sua Resposta</label>
+                    <input type="text" id="recover-answer" placeholder="Responda aqui..." style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+                </div>
+                <button onclick="doRecoveryStep2()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg, var(--fire-1), var(--fire-2)); color:white; font-size:16px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;">✅ Verificar</button>
+            </div>
+
+            <!-- Step 3: Nova senha -->
+            <div id="recover-step3" style="display:none;">
+                <div style="background:rgba(76,175,80,0.1); border:1px solid rgba(76,175,80,0.2); border-radius:10px; padding:14px; margin-bottom:16px;">
+                    <p style="font-size:14px; color:var(--success);">✅ Identidade confirmada! Defina sua nova senha.</p>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">🔒 Nova Senha</label>
+                    <input type="password" id="recover-newpass" placeholder="Mínimo 6 caracteres" style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--metal-1); margin-bottom:6px;">🔒 Confirmar Nova Senha</label>
+                    <input type="password" id="recover-newpass2" placeholder="Repita a nova senha" style="width:100%; padding:12px 16px; background:var(--dark-4); border:1px solid rgba(255,107,53,0.2); border-radius:10px; color:var(--metal-1); font-size:14px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+                </div>
+                <button onclick="doRecoveryStep3()" style="width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg, var(--fire-1), var(--fire-2)); color:white; font-size:16px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;">💾 Salvar Nova Senha</button>
+            </div>
+
+            <div class="auth-error" id="recover-error" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px; margin-top:12px;"></div>
+
+            <p style="text-align:center; margin-top:16px; font-size:12px; color:var(--metal-3);">
+                Lembrou? <a href="#" onclick="showAuthTab('login'); return false;" style="color:var(--fire-1); text-decoration:none;">Voltar ao login</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- APP CONTAINER -->
+<div id="app-container">
+
 <!-- Particles -->
 <canvas id="particles-canvas"></canvas>
 
@@ -1179,11 +1324,13 @@
         </div>
     </div>
     <nav class="header-nav">
+        <span id="user-display" style="margin-right:8px;"></span>
         <button class="nav-btn active" onclick="switchPanel('forge')" id="nav-forge">🔥 Forja</button>
         <button class="nav-btn" onclick="switchPanel('build')" id="nav-build">📦 Build</button>
         <button class="nav-btn" onclick="switchPanel('projects')" id="nav-projects">📁 Projetos</button>
         <button class="nav-btn" onclick="switchPanel('tutorial')" id="nav-tutorial">📖 Mentora</button>
         <button class="nav-btn" onclick="showConfigModal()" id="nav-config">⚙️</button>
+        <button class="nav-btn" onclick="doLogout()" id="logout-btn" style="display:none; border-color:rgba(244,67,54,0.3); color:#f44336;">🚪 Sair</button>
     </nav>
 </header>
 
@@ -1492,6 +1639,9 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+</div><!-- /app-container -->
+
+<script src="js/vulcan-auth.js"></script>
 <script src="js/vulcan-core.js"></script>
 <script src="js/vulcan-features.js"></script>
 

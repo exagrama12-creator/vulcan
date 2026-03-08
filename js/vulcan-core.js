@@ -148,6 +148,7 @@ const TUTORIALS = {
 
 // ===== INIT =====
 function init() {
+    checkAuth();
     initParticles();
     loadSavedConfig();
     renderProjects();
