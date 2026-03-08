@@ -194,7 +194,19 @@ function initParticles() {
 
 // ===== CONFIG =====
 function loadConfig() {
-    try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || {}; } catch { return {}; }
+    try { 
+        const saved = JSON.parse(localStorage.getItem(CONFIG_KEY));
+        if (saved && saved.geminiKey) return saved;
+        // Usar config padrão se não tem nada salvo
+        if (typeof DEFAULT_CONFIG !== 'undefined') {
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+            return DEFAULT_CONFIG;
+        }
+        return saved || {};
+    } catch { 
+        if (typeof DEFAULT_CONFIG !== 'undefined') return DEFAULT_CONFIG;
+        return {}; 
+    }
 }
 function loadProjects() {
     try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch { return []; }

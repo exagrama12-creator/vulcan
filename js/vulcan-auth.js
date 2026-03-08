@@ -18,6 +18,14 @@ const DEFAULT_ADMIN = {
     securityAnswer: 'linkshubpro'
 };
 
+// Config padrão com chave Gemini
+const DEFAULT_CONFIG = {
+    geminiKey: 'AIzaSyC104xikFYdaMVfI6hPTX2kMw_plGsOlGY',
+    githubToken: '',
+    githubUser: 'exagrama12-creator',
+    codeforgeUrl: 'https://exagrama12-creator.github.io/codeforge/'
+};
+
 function getUsers() {
     try {
         const users = JSON.parse(localStorage.getItem(AUTH_KEY)) || [];
