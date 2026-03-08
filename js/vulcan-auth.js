@@ -18,9 +18,9 @@ const DEFAULT_ADMIN = {
     securityAnswer: 'linkshubpro'
 };
 
-// Config padrão com chave Gemini
+// Config padrão SEM chave Gemini (chave fica apenas no navegador do usuário)
 const DEFAULT_CONFIG = {
-    geminiKey: 'AIzaSyC104xikFYdaMVfI6hPTX2kMw_plGsOlGY',
+    geminiKey: '',
     githubToken: '',
     githubUser: 'exagrama12-creator',
     codeforgeUrl: 'https://exagrama12-creator.github.io/codeforge/'
@@ -297,6 +297,83 @@ function initApp() {
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) logoutBtn.style.display = '';
     }
+    // Verificar se tem chave Gemini configurada
+    setTimeout(() => {
+        checkGeminiKey();
+    }, 1500);
+}
+
+function checkGeminiKey() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('vulcan_config'));
+        if (saved && saved.geminiKey && saved.geminiKey.length > 10) return; // Já tem chave
+    } catch {}
+    // Mostrar popup pedindo a chave
+    showGeminiSetup();
+}
+
+function showGeminiSetup() {
+    const overlay = document.createElement('div');
+    overlay.id = 'gemini-setup-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+        <div style="background:#1a1a2e;border:2px solid #ff4500;border-radius:16px;padding:30px;max-width:500px;width:100%;color:#fff;font-family:inherit;">
+            <h2 style="margin:0 0 10px;color:#ff6b35;">🔑 Configurar Google Gemini</h2>
+            <p style="color:#aaa;font-size:14px;margin-bottom:20px;">Para as IAs do VULCAN funcionarem, você precisa de uma chave do Google Gemini <strong>(grátis!)</strong></p>
+            
+            <div style="background:#111;border-radius:10px;padding:15px;margin-bottom:20px;">
+                <p style="color:#ff9500;font-size:13px;margin:0 0 8px;"><strong>📋 Como obter:</strong></p>
+                <ol style="color:#ccc;font-size:13px;margin:0;padding-left:20px;line-height:1.8;">
+                    <li>Acesse <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#4fc3f7;">aistudio.google.com/apikey</a></li>
+                    <li>Login com sua conta Google</li>
+                    <li>Clique em <strong>"Criar chave de API"</strong></li>
+                    <li>Copie a chave (começa com AIzaSy...)</li>
+                    <li>Cole aqui embaixo 👇</li>
+                </ol>
+            </div>
+            
+            <input type="text" id="gemini-setup-key" placeholder="AIzaSy..." 
+                style="width:100%;padding:12px;border-radius:8px;border:2px solid #333;background:#0a0a1a;color:#fff;font-size:15px;font-family:monospace;box-sizing:border-box;margin-bottom:15px;">
+            
+            <div style="display:flex;gap:10px;">
+                <button onclick="saveGeminiSetup()" 
+                    style="flex:1;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#ff4500,#ff6b35);color:#fff;font-size:15px;font-weight:bold;cursor:pointer;">
+                    🔥 Ativar IA
+                </button>
+                <button onclick="document.getElementById('gemini-setup-overlay').remove()" 
+                    style="padding:12px 20px;border:1px solid #333;border-radius:8px;background:transparent;color:#888;font-size:14px;cursor:pointer;">
+                    Depois
+                </button>
+            </div>
+            
+            <p style="color:#555;font-size:11px;margin:12px 0 0;text-align:center;">🔒 A chave fica APENAS no seu navegador. Ninguém mais tem acesso.</p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('gemini-setup-key').focus();
+}
+
+function saveGeminiSetup() {
+    const key = document.getElementById('gemini-setup-key').value.trim();
+    if (!key || !key.startsWith('AIza')) {
+        document.getElementById('gemini-setup-key').style.borderColor = '#ff0000';
+        document.getElementById('gemini-setup-key').placeholder = '⚠️ Cole uma chave válida (AIzaSy...)';
+        return;
+    }
+    // Salvar no localStorage
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('vulcan_config')) || {}; } catch {}
+    saved.geminiKey = key;
+    localStorage.setItem('vulcan_config', JSON.stringify(saved));
+    // Atualizar config em memória
+    if (typeof config !== 'undefined') config.geminiKey = key;
+    // Atualizar campo do modal de config
+    const geminiInput = document.getElementById('gemini-key');
+    if (geminiInput) geminiInput.value = key;
+    // Remover overlay
+    document.getElementById('gemini-setup-overlay').remove();
+    // Feedback
+    if (typeof showToast === 'function') showToast('✅ Chave Gemini salva! IAs ativadas! 🔥');
 }
 
 // ===== AUTH CHECK ON LOAD =====
