@@ -299,18 +299,7 @@ function selectAgent(agentId) {
 function handleChatKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
-function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-    const welcome = document.getElementById('welcome-screen');
-    if (welcome) welcome.remove();
-    addMessage('👤', 'Você', text, 'user');
-    input.value = '';
-    chatHistory.push({ role: 'user', text });
-    showTyping();
-    processWithAI(text);
-}
+// sendMessage is defined in vulcan-autopilot.js (with command processing)
 function addMessage(emoji, name, text, type) {
     const container = document.getElementById('chat-container');
     const msg = document.createElement('div');
