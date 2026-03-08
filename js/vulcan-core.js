@@ -360,7 +360,7 @@ Regras: Responda em português brasileiro. Seja direto e prático. Use emojis. E
         });
         contents.push({ role: 'user', parts: [{ text: userMessage }] });
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
