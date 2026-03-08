@@ -150,6 +150,11 @@ const TUTORIALS = {
 function init() {
     checkAuth();
     initParticles();
+    // Garantir que a config está salva no localStorage
+    if (!localStorage.getItem(CONFIG_KEY) && typeof DEFAULT_CONFIG !== 'undefined') {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+        config = DEFAULT_CONFIG;
+    }
     loadSavedConfig();
     renderProjects();
 }
