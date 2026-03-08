@@ -212,11 +212,15 @@ function loadProjects() {
     try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; } catch { return []; }
 }
 function saveConfig() {
+    const geminiEl = document.getElementById('gemini-key');
+    const githubTokenEl = document.getElementById('github-token');
+    const githubUserEl = document.getElementById('github-user');
+    const codeforgeUrlEl = document.getElementById('codeforge-url');
     config = {
-        geminiKey: document.getElementById('gemini-key').value.trim(),
-        githubToken: document.getElementById('github-token').value.trim(),
-        githubUser: document.getElementById('github-user').value.trim(),
-        codeforgeUrl: document.getElementById('codeforge-url').value.trim()
+        geminiKey: (geminiEl ? geminiEl.value.trim() : '') || config.geminiKey || '',
+        githubToken: (githubTokenEl ? githubTokenEl.value.trim() : '') || config.githubToken || '',
+        githubUser: (githubUserEl ? githubUserEl.value.trim() : '') || config.githubUser || '',
+        codeforgeUrl: (codeforgeUrlEl ? codeforgeUrlEl.value.trim() : '') || config.codeforgeUrl || ''
     };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     closeConfigModal();
@@ -241,7 +245,32 @@ function toggleMobileSidebar() {
     document.getElementById('sidebar').classList.toggle('mobile-open');
 }
 function showConfigModal() {
-    document.getElementById('config-modal').classList.add('show');
+    // Recriar conteúdo original do modal (pode ter sido alterado pelo import)
+    const modal = document.getElementById('config-modal');
+    const modalContent = modal.querySelector('.modal');
+    modalContent.innerHTML = `
+        <button class="modal-close" onclick="closeConfigModal()">✕</button>
+        <h2>⚙️ Configurações</h2>
+        <div class="config-section">
+            <label>🔑 Google Gemini API Key</label>
+            <input type="password" class="config-input" id="gemini-key" placeholder="AIzaSy..." value="${(config.geminiKey || '').replace(/"/g, '&quot;')}">
+            <p style="font-size:11px; color:var(--metal-3); margin-top:6px;">Obtenha em: <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--fire-1)">aistudio.google.com</a></p>
+        </div>
+        <div class="config-section">
+            <label>🔗 GitHub Token (para deploy)</label>
+            <input type="password" class="config-input" id="github-token" placeholder="ghp_..." value="${(config.githubToken || '').replace(/"/g, '&quot;')}">
+        </div>
+        <div class="config-section">
+            <label>👤 GitHub Username</label>
+            <input type="text" class="config-input" id="github-user" placeholder="seu-usuario" value="${(config.githubUser || '').replace(/"/g, '&quot;')}">
+        </div>
+        <div class="config-section">
+            <label>🔗 URL do CodeForge</label>
+            <input type="text" class="config-input" id="codeforge-url" placeholder="https://..." value="${(config.codeforgeUrl || '').replace(/"/g, '&quot;')}">
+        </div>
+        <button class="config-save-btn" onclick="saveConfig()">💾 Salvar</button>
+    `;
+    modal.classList.add('show');
 }
 function closeConfigModal() {
     document.getElementById('config-modal').classList.remove('show');
