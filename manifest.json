@@ -1,0 +1,16 @@
+{
+    "name": "VULCAN — A Forja de Apps",
+    "short_name": "VULCAN",
+    "description": "Transforme código-fonte em apps prontos para Android e Windows",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0d0a08",
+    "theme_color": "#ff6b35",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔨</text></svg>",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
+}

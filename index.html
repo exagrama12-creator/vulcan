@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VULCAN — A Forja de Apps 🔨🔥</title>
+    <meta name="description" content="VULCAN - Plataforma de compilação e empacotamento de apps com IA. Transforme código em apps prontos para Android e Windows.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a0a00">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔨</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        :root {
+            --fire-1: #ff6b35;
+            --fire-2: #ff4500;
+            --fire-3: #cc3700;
+            --ember-1: #ff8c42;
+            --ember-2: #ffa559;
+            --lava: #e63900;
+            --dark-forge: #0d0a08;
+            --dark-2: #1a1410;
+            --dark-3: #241c15;
+            --dark-4: #2e241b;
+            --metal-1: #c4b5a0;
+            --metal-2: #a89880;
+            --metal-3: #8c7a65;
+            --gold: #ffd700;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --info: #2196f3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-forge);
+            color: var(--metal-1);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== PARTICLES BACKGROUND ===== */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(13, 10, 8, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo .logo-icon {
+            font-size: 28px;
+            animation: hammerSwing 2s ease-in-out infinite;
+        }
+
+        @keyframes hammerSwing {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .header-logo h1 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--fire-1), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+        }
+
+        .header-logo .subtitle {
+            font-size: 10px;
+            color: var(--metal-3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--ember-1);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(255, 107, 53, 0.2);
+            border-color: var(--fire-1);
+            color: var(--gold);
+        }
+
+        .nav-btn.active {
+            background: var(--fire-2);
+            color: #fff;
+            border-color: var(--fire-2);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== SIDEBAR - AGENTES ===== */
+        .sidebar {
+            width: 280px;
+            background: rgba(26, 20, 16, 0.95);
+            border-right: 1px solid rgba(255, 107, 53, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            padding: 16px 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--fire-1);
+            border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+        }
+
+        .agent-card {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 107, 53, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .agent-card:hover {
+            background: rgba(255, 107, 53, 0.08);
+        }
+
+        .agent-card.active {
+            background: rgba(255, 107, 53, 0.15);
+            border-left: 3px solid var(--fire-1);
+        }
+
+        .agent-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .agent-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--metal-1);
+        }
+
+        .agent-info .agent-role {
+            font-size: 11px;
+            color: var(--metal-3);
+            margin-top: 2px;
+        }
+
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-left: auto;
+            flex-shrink: 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ===== WORKSPACE ===== */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== PANELS ===== */
+        .panel {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        /* ===== FORGE PANEL (Chat principal) ===== */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.agent .avatar {
+            background: rgba(255, 107, 53, 0.2);
+        }
+
+        .message.user .avatar {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .message .bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .message.agent .bubble {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-top-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background: rgba(255, 107, 53, 0.15);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-top-right-radius: 4px;
+        }
+
+        .message .bubble code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--ember-2);
+        }
+
+        .message .bubble pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--ember-2);
+        }
+
+        .message .sender-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--fire-1);
+            margin-bottom: 4px;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            color: var(--metal-3);
+            font-size: 13px;
+        }
+
+        .typing-indicator.show {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--fire-1);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* ===== INPUT AREA ===== */
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255, 107, 53, 0.15);
+            background: rgba(26, 20, 16, 0.95);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #chat-input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 100px;
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: 12px;
+            color: var(--metal-1);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #chat-input:focus {
+            border-color: var(--fire-1);
+        }
+
+        #chat-input::placeholder {
+            color: var(--metal-3);
+        }
+
+        .input-actions {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .input-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: transparent;
+            color: var(--metal-3);
+        }
+
+        .input-action-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+            color: var(--fire-1);
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--fire-1), var(--fire-2));
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.4);
+        }
+
+        /* ===== BUILD PANEL ===== */
+        .build-panel {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .build-section {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .build-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--fire-1);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .build-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--dark-4);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .build-option:hover {
+            border-color: rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.08);
+        }
+
+        .build-option.selected {
+            border-color: var(--fire-1);
+            background: rgba(255, 107, 53, 0.12);
+        }
+
+        .build-option .option-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(255, 107, 53, 0.15);
+        }
+
+        .build-option .option-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--metal-1);
+        }
+
+        .build-option .option-info p {
+            font-size: 12px;
+            color: var(--metal-3);
+            margin-top: 4px;
+        }
+
+        .build-option .option-badge {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-free {
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--success);
+        }
+
+        .badge-auto {
+            background: rgba(33, 150, 243, 0.15);
+            color: var(--info);
+        }
+
+        /* Code Editor */
+        .code-editor-container {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .editor-tabs {
+            display: flex;
+            background: var(--dark-2);
+            border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+            overflow-x: auto;
+        }
+
+        .editor-tab {
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--metal-3);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .editor-tab:hover {
+            color: var(--metal-1);
+        }
+
+        .editor-tab.active {
+            color: var(--fire-1);
+            border-bottom-color: var(--fire-1);
+        }
+
+        .editor-tab .close-tab {
+            margin-left: 8px;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+        .editor-tab .close-tab:hover {
+            opacity: 1;
+        }
+
+        #code-editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 16px;
+            background: var(--dark-forge);
+            color: var(--ember-2);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            border: none;
+            outline: none;
+            resize: vertical;
+            tab-size: 2;
+        }
+
+        /* ===== BUILD PROGRESS ===== */
+        .build-progress {
+            display: none;
+            padding: 30px;
+        }
+
+        .build-progress.active {
+            display: block;
+        }
+
+        .progress-container {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .progress-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--fire-1);
+        }
+
+        .progress-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--dark-4);
+            border-top: 3px solid var(--fire-1);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: var(--dark-4);
+            transition: all 0.5s;
+        }
+
+        .progress-step.active {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+        }
+
+        .progress-step.done {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+        }
+
+        .step-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: var(--dark-3);
+            flex-shrink: 0;
+        }
+
+        .progress-step.done .step-icon {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .progress-step.active .step-icon {
+            background: rgba(255, 107, 53, 0.2);
+        }
+
+        .step-info {
+            flex: 1;
+        }
+
+        .step-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--metal-1);
+        }
+
+        .step-info p {
+            font-size: 12px;
+            color: var(--metal-3);
+            margin-top: 2px;
+        }
+
+        .progress-bar-container {
+            margin-top: 24px;
+            background: var(--dark-4);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--fire-1), var(--gold));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* ===== PROJECTS PANEL ===== */
+        .projects-panel {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .project-card {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .project-card:hover {
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .project-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .project-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--metal-1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .project-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--metal-3);
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .project-action-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--ember-1);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .project-action-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+        }
+
+        .project-action-btn.primary {
+            background: var(--fire-2);
+            color: white;
+            border-color: var(--fire-2);
+        }
+
+        /* ===== TUTORIAL PANEL ===== */
+        .tutorial-panel {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .tutorial-card {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tutorial-card:hover {
+            border-color: var(--fire-1);
+            transform: translateY(-2px);
+        }
+
+        .tutorial-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--fire-1);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tutorial-card p {
+            font-size: 13px;
+            color: var(--metal-3);
+            line-height: 1.5;
+        }
+
+        .tutorial-difficulty {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .diff-easy {
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--success);
+        }
+
+        .diff-medium {
+            background: rgba(255, 152, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .diff-advanced {
+            background: rgba(244, 67, 54, 0.15);
+            color: var(--error);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .modal h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--fire-1);
+            margin-bottom: 16px;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--metal-3);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* ===== IMPORT FROM CODEFORGE ===== */
+        .import-section {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px dashed rgba(255, 107, 53, 0.4);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .import-section:hover {
+            border-color: var(--fire-1);
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .import-section .import-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .import-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--fire-1);
+            margin-bottom: 8px;
+        }
+
+        .import-section p {
+            font-size: 13px;
+            color: var(--metal-3);
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: var(--metal-1);
+            font-size: 14px;
+            z-index: 300;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 53, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 107, 53, 0.5);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                bottom: 0;
+                z-index: 50;
+                width: 280px;
+            }
+
+            .sidebar.mobile-open {
+                display: flex;
+            }
+
+            .header-nav {
+                gap: 4px;
+            }
+
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+
+            .build-panel, .projects-panel, .tutorial-panel {
+                padding: 16px;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--ember-1);
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* ===== WELCOME SCREEN ===== */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-screen .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: hammerSwing 2s ease-in-out infinite;
+        }
+
+        .welcome-screen h2 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--fire-1), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .welcome-screen p {
+            font-size: 15px;
+            color: var(--metal-3);
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .welcome-btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--ember-1);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .welcome-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+            border-color: var(--fire-1);
+            transform: translateY(-2px);
+        }
+
+        .welcome-btn.primary {
+            background: linear-gradient(135deg, var(--fire-1), var(--fire-2));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* ===== API CONFIG ===== */
+        .config-section {
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .config-section label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--metal-1);
+            margin-bottom: 8px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--dark-4);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: 10px;
+            color: var(--metal-1);
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none;
+        }
+
+        .config-input:focus {
+            border-color: var(--fire-1);
+        }
+
+        .config-save-btn {
+            margin-top: 12px;
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--fire-1), var(--fire-2));
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Particles -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-logo">
+        <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+        <span class="logo-icon">🔨</span>
+        <div>
+            <h1>VULCAN</h1>
+            <div class="subtitle">A Forja de Apps</div>
+        </div>
+    </div>
+    <nav class="header-nav">
+        <button class="nav-btn active" onclick="switchPanel('forge')" id="nav-forge">🔥 Forja</button>
+        <button class="nav-btn" onclick="switchPanel('build')" id="nav-build">📦 Build</button>
+        <button class="nav-btn" onclick="switchPanel('projects')" id="nav-projects">📁 Projetos</button>
+        <button class="nav-btn" onclick="switchPanel('tutorial')" id="nav-tutorial">📖 Mentora</button>
+        <button class="nav-btn" onclick="showConfigModal()" id="nav-config">⚙️</button>
+    </nav>
+</header>
+
+<!-- Main -->
+<div class="main-container">
+    <!-- Sidebar - Agentes -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-title">🤖 Agentes IA</div>
+        
+        <div class="agent-card active" onclick="selectAgent('hefesto')" id="agent-hefesto">
+            <div class="agent-avatar" style="background: rgba(255,107,53,0.2)">🔨</div>
+            <div class="agent-info">
+                <h3>HEFESTO</h3>
+                <div class="agent-role">Comandante da Forja</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('magma')" id="agent-magma">
+            <div class="agent-avatar" style="background: rgba(255,69,0,0.2)">🌋</div>
+            <div class="agent-info">
+                <h3>MAGMA</h3>
+                <div class="agent-role">Compilador Android</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('titanium')" id="agent-titanium">
+            <div class="agent-avatar" style="background: rgba(100,149,237,0.2)">🛡️</div>
+            <div class="agent-info">
+                <h3>TITANIUM</h3>
+                <div class="agent-role">Compilador Windows</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('ember')" id="agent-ember">
+            <div class="agent-avatar" style="background: rgba(255,140,66,0.2)">🔥</div>
+            <div class="agent-info">
+                <h3>EMBER</h3>
+                <div class="agent-role">Compilador Web/PWA</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('anvil')" id="agent-anvil">
+            <div class="agent-avatar" style="background: rgba(169,169,169,0.2)">⚒️</div>
+            <div class="agent-info">
+                <h3>ANVIL</h3>
+                <div class="agent-role">Analisador de Código</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('spark')" id="agent-spark">
+            <div class="agent-avatar" style="background: rgba(255,215,0,0.2)">⚡</div>
+            <div class="agent-info">
+                <h3>SPARK</h3>
+                <div class="agent-role">Otimizador</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('forge-link')" id="agent-forge-link">
+            <div class="agent-avatar" style="background: rgba(148,103,189,0.2)">🔗</div>
+            <div class="agent-info">
+                <h3>FORGE LINK</h3>
+                <div class="agent-role">Bridge CodeForge</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('minerva')" id="agent-minerva">
+            <div class="agent-avatar" style="background: rgba(76,175,80,0.2)">📚</div>
+            <div class="agent-info">
+                <h3>MINERVA</h3>
+                <div class="agent-role">Mentora & Tutora</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+
+        <div class="agent-card" onclick="selectAgent('vulcanus')" id="agent-vulcanus">
+            <div class="agent-avatar" style="background: rgba(244,67,54,0.2)">🔮</div>
+            <div class="agent-info">
+                <h3>VULCANUS</h3>
+                <div class="agent-role">IA Central</div>
+            </div>
+            <div class="agent-status"></div>
+        </div>
+    </aside>
+
+    <!-- Workspace -->
+    <main class="workspace">
+        <!-- FORGE PANEL (Chat) -->
+        <div class="panel active" id="panel-forge">
+            <div class="chat-container" id="chat-container">
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-icon">🔨🔥</div>
+                    <h2>Bem-vindo à VULCAN</h2>
+                    <p>A Forja de Apps — transforme código-fonte em aplicativos prontos para Android, Windows e Web. Converse com nossos agentes IA ou importe direto do CodeForge.</p>
+                    <div class="welcome-actions">
+                        <button class="welcome-btn primary" onclick="startNewProject()">🚀 Novo Projeto</button>
+                        <button class="welcome-btn" onclick="importFromCodeForge()">🔗 Importar do CodeForge</button>
+                        <button class="welcome-btn" onclick="switchPanel('tutorial')">📖 Aprender</button>
+                    </div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span id="typing-agent">HEFESTO está pensando...</span>
+            </div>
+            <div class="input-area">
+                <div class="input-row">
+                    <div class="input-wrapper">
+                        <textarea id="chat-input" placeholder="Fale com os agentes... (ex: 'Quero criar um app de notas para Android')" rows="1" onkeydown="handleChatKey(event)"></textarea>
+                        <div class="input-actions">
+                            <button class="input-action-btn" onclick="importFromCodeForge()" title="Importar do CodeForge">🔗</button>
+                            <button class="input-action-btn" onclick="document.getElementById('file-upload').click()" title="Upload de código">📎</button>
+                        </div>
+                    </div>
+                    <button class="send-btn" onclick="sendMessage()">🔥</button>
+                </div>
+                <input type="file" id="file-upload" style="display:none" accept=".html,.css,.js,.json,.py,.java,.kt,.swift,.ts,.tsx,.jsx" onchange="handleFileUpload(event)" multiple>
+            </div>
+        </div>
+
+        <!-- BUILD PANEL -->
+        <div class="panel" id="panel-build">
+            <div class="build-panel">
+                <div class="import-section" onclick="importFromCodeForge()">
+                    <div class="import-icon">🔗⚡</div>
+                    <h3>Importar do CodeForge</h3>
+                    <p>Conecte com o CodeForge e importe projetos automaticamente</p>
+                </div>
+
+                <div class="build-section">
+                    <h2>📦 Plataforma de Build</h2>
+                    <div class="build-option selected" onclick="selectBuildTarget('pwa')">
+                        <div class="option-icon">🌐</div>
+                        <div class="option-info">
+                            <h3>PWA — Progressive Web App</h3>
+                            <p>Instala direto do navegador. Funciona offline no Android e Windows.</p>
+                        </div>
+                        <span class="option-badge badge-free">GRÁTIS</span>
+                    </div>
+                    <div class="build-option" onclick="selectBuildTarget('android')">
+                        <div class="option-icon">📱</div>
+                        <div class="option-info">
+                            <h3>Android APK</h3>
+                            <p>Gera APK instalável via PWABuilder + Bubblewrap.</p>
+                        </div>
+                        <span class="option-badge badge-auto">AUTO</span>
+                    </div>
+                    <div class="build-option" onclick="selectBuildTarget('windows')">
+                        <div class="option-icon">🖥️</div>
+                        <div class="option-info">
+                            <h3>Windows Desktop</h3>
+                            <p>Empacota com Electron para .exe desktop.</p>
+                        </div>
+                        <span class="option-badge badge-auto">AUTO</span>
+                    </div>
+                    <div class="build-option" onclick="selectBuildTarget('zip')">
+                        <div class="option-icon">📂</div>
+                        <div class="option-info">
+                            <h3>Download ZIP</h3>
+                            <p>Baixa todo o código-fonte em um arquivo ZIP.</p>
+                        </div>
+                        <span class="option-badge badge-free">GRÁTIS</span>
+                    </div>
+                </div>
+
+                <div class="code-editor-container">
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" onclick="switchEditorTab('html')">index.html</button>
+                        <button class="editor-tab" onclick="switchEditorTab('css')">style.css</button>
+                        <button class="editor-tab" onclick="switchEditorTab('js')">app.js</button>
+                        <button class="editor-tab" onclick="switchEditorTab('manifest')">manifest.json</button>
+                    </div>
+                    <textarea id="code-editor" spellcheck="false" placeholder="Cole seu código aqui ou importe do CodeForge..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="project-action-btn" onclick="analyzeCode()">🔍 Analisar Código</button>
+                    <button class="project-action-btn primary" onclick="startBuild()" style="font-size:14px; padding: 12px 28px;">🔨 FORJAR APP</button>
+                </div>
+            </div>
+
+            <div class="build-progress" id="build-progress">
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <div class="progress-spinner"></div>
+                        <h2>Forjando seu app...</h2>
+                    </div>
+                    <div class="progress-steps" id="progress-steps">
+                        <!-- Filled dynamically -->
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:24px;">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROJECTS PANEL -->
+        <div class="panel" id="panel-projects">
+            <div class="projects-panel" id="projects-list">
+                <h2 style="font-size:22px; font-weight:800; color:var(--fire-1); margin-bottom:20px;">📁 Meus Projetos</h2>
+                <div id="projects-container">
+                    <div style="text-align:center; padding:60px; color:var(--metal-3);">
+                        <div style="font-size:50px; margin-bottom:16px;">📭</div>
+                        <p>Nenhum projeto ainda. Comece criando ou importando do CodeForge!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TUTORIAL PANEL -->
+        <div class="panel" id="panel-tutorial">
+            <div class="tutorial-panel">
+                <h2 style="font-size:22px; font-weight:800; color:var(--fire-1); margin-bottom:8px;">📖 MINERVA — Sua Mentora</h2>
+                <p style="color:var(--metal-3); margin-bottom:24px; font-size:14px;">Aprenda passo a passo. Clique em qualquer tutorial para começar.</p>
+
+                <div class="tutorial-card" onclick="startTutorial('intro')">
+                    <h3>🏠 O que é o VULCAN?</h3>
+                    <p>Entenda como a Forja de Apps funciona, o que cada agente faz, e como transformar seu código em apps prontos.</p>
+                    <span class="tutorial-difficulty diff-easy">Iniciante</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('codeforge')">
+                    <h3>🔗 Importando do CodeForge</h3>
+                    <p>Aprenda a conectar o CodeForge ao VULCAN e enviar projetos automaticamente para compilação.</p>
+                    <span class="tutorial-difficulty diff-easy">Iniciante</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('pwa')">
+                    <h3>🌐 Criando uma PWA</h3>
+                    <p>Transforme qualquer site em um app instalável que funciona offline no celular e desktop.</p>
+                    <span class="tutorial-difficulty diff-easy">Iniciante</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('android')">
+                    <h3>📱 Gerando APK para Android</h3>
+                    <p>Passo a passo completo para gerar um arquivo APK e instalar no seu celular Android.</p>
+                    <span class="tutorial-difficulty diff-medium">Intermediário</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('windows')">
+                    <h3>🖥️ Criando .EXE para Windows</h3>
+                    <p>Como empacotar seu app para rodar como programa nativo no Windows.</p>
+                    <span class="tutorial-difficulty diff-medium">Intermediário</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('deploy')">
+                    <h3>🚀 Deploy no GitHub Pages</h3>
+                    <p>Publique seu app gratuitamente na internet com GitHub Pages.</p>
+                    <span class="tutorial-difficulty diff-easy">Iniciante</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('optimize')">
+                    <h3>⚡ Otimização de Performance</h3>
+                    <p>Técnicas para deixar seu app mais rápido, leve e profissional.</p>
+                    <span class="tutorial-difficulty diff-advanced">Avançado</span>
+                </div>
+
+                <div class="tutorial-card" onclick="startTutorial('api')">
+                    <h3>🔑 Configurando APIs e Chaves</h3>
+                    <p>Como configurar Google Gemini, GitHub Token e outras APIs usadas no VULCAN.</p>
+                    <span class="tutorial-difficulty diff-medium">Intermediário</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeConfigModal()">✕</button>
+        <h2>⚙️ Configurações</h2>
+        
+        <div class="config-section">
+            <label>🔑 Google Gemini API Key</label>
+            <input type="password" class="config-input" id="gemini-key" placeholder="AIzaSy...">
+            <p style="font-size:11px; color:var(--metal-3); margin-top:6px;">Obtenha em: <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--fire-1)">aistudio.google.com</a></p>
+        </div>
+
+        <div class="config-section">
+            <label>🔗 GitHub Token (para deploy)</label>
+            <input type="password" class="config-input" id="github-token" placeholder="ghp_...">
+        </div>
+
+        <div class="config-section">
+            <label>👤 GitHub Username</label>
+            <input type="text" class="config-input" id="github-user" placeholder="seu-usuario">
+        </div>
+
+        <div class="config-section">
+            <label>🔗 URL do CodeForge (para importação)</label>
+            <input type="text" class="config-input" id="codeforge-url" placeholder="https://exagrama12-creator.github.io/codeforge/">
+        </div>
+
+        <button class="config-save-btn" onclick="saveConfig()">💾 Salvar Configurações</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/vulcan-core.js"></script>
+<script src="js/vulcan-features.js"></script>
+
+</body>
+</html>
