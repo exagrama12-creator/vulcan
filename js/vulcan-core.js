@@ -377,10 +377,10 @@ Regras: Responda em português brasileiro. Seja direto e prático. Use emojis. E
         });
         const data = await response.json();
         
-        // Verificar se é erro de cota
+        // Verificar se é erro de cota ou sobrecarga
         if (data.error) {
             const errMsg = data.error.message || '';
-            if (errMsg.includes('quota') || errMsg.includes('rate') || errMsg.includes('429') || errMsg.includes('exceeded') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+            if (errMsg.includes('quota') || errMsg.includes('rate') || errMsg.includes('429') || errMsg.includes('exceeded') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('high demand') || errMsg.includes('overloaded') || errMsg.includes('unavailable') || errMsg.includes('not valid') || errMsg.includes('503') || errMsg.includes('500')) {
                 // Tentar próximo modelo
                 const nextIdx = modelIdx + 1;
                 if (nextIdx < GEMINI_MODELS.length) {
