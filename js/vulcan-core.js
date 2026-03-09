@@ -327,7 +327,16 @@ function hideTyping() {
     document.getElementById('typing-indicator').classList.remove('show');
 }
 
-// ===== GEMINI AI =====
+// ===== GEMINI AI (com fallback + retry automático) =====
+const GEMINI_MODELS = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash-lite'
+];
+let currentModelIndex = 0;
+let retryCount = 0;
+const MAX_RETRIES = 3;
+
 async function processWithAI(userMessage) {
     const agent = AGENTS[currentAgent];
     if (!config.geminiKey) {
@@ -336,6 +345,14 @@ async function processWithAI(userMessage) {
         handleLocalResponse(userMessage);
         return;
     }
+    
+    retryCount = 0;
+    await tryGeminiRequest(userMessage, agent, 0);
+}
+
+async function tryGeminiRequest(userMessage, agent, modelIdx) {
+    const model = GEMINI_MODELS[modelIdx] || GEMINI_MODELS[0];
+    
     try {
         const systemPrompt = `Você é ${agent.name}, um agente IA especializado da plataforma VULCAN (A Forja de Apps).
 Personalidade: ${agent.personality}
@@ -349,7 +366,7 @@ Regras: Responda em português brasileiro. Seja direto e prático. Use emojis. E
         });
         contents.push({ role: 'user', parts: [{ text: userMessage }] });
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${config.geminiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.geminiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -359,19 +376,61 @@ Regras: Responda em português brasileiro. Seja direto e prático. Use emojis. E
             })
         });
         const data = await response.json();
+        
+        // Verificar se é erro de cota
+        if (data.error) {
+            const errMsg = data.error.message || '';
+            if (errMsg.includes('quota') || errMsg.includes('rate') || errMsg.includes('429') || errMsg.includes('exceeded') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+                // Tentar próximo modelo
+                const nextIdx = modelIdx + 1;
+                if (nextIdx < GEMINI_MODELS.length) {
+                    document.getElementById('typing-agent').textContent = `${agent.name} trocando rota... (${GEMINI_MODELS[nextIdx]})`;
+                    await new Promise(r => setTimeout(r, 1000));
+                    return tryGeminiRequest(userMessage, agent, nextIdx);
+                }
+                
+                // Todos os modelos esgotados — esperar e tentar de novo
+                retryCount++;
+                if (retryCount <= MAX_RETRIES) {
+                    const waitSec = retryCount * 15;
+                    document.getElementById('typing-agent').textContent = `${agent.name} aguardando ${waitSec}s (tentativa ${retryCount}/${MAX_RETRIES})...`;
+                    await new Promise(r => setTimeout(r, waitSec * 1000));
+                    return tryGeminiRequest(userMessage, agent, 0);
+                }
+                
+                // Esgotou todas as tentativas — usar resposta local
+                hideTyping();
+                addMessage(agent.emoji, agent.name, '⏳ **Limite temporário atingido.**\n\nVou responder com meu conhecimento local. A IA completa volta em 1 minuto.\n\n---', 'agent');
+                handleLocalResponse(userMessage);
+                return;
+            }
+            
+            // Outro tipo de erro
+            hideTyping();
+            addMessage(agent.emoji, agent.name, `⚠️ Erro: ${errMsg}`, 'agent');
+            return;
+        }
+        
         hideTyping();
         if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
             const reply = data.candidates[0].content.parts[0].text;
             addMessage(agent.emoji, agent.name, reply, 'agent');
             chatHistory.push({ role: 'agent', agent: currentAgent, text: reply });
-        } else if (data.error) {
-            addMessage(agent.emoji, agent.name, `⚠️ Erro: ${data.error.message}`, 'agent');
+            // Lembrar qual modelo funcionou
+            currentModelIndex = modelIdx;
         } else {
             addMessage(agent.emoji, agent.name, 'Não consegui processar. Tente novamente! 🔄', 'agent');
         }
     } catch (err) {
+        // Erro de rede — tentar retry
+        retryCount++;
+        if (retryCount <= MAX_RETRIES) {
+            document.getElementById('typing-agent').textContent = `${agent.name} reconectando... (${retryCount}/${MAX_RETRIES})`;
+            await new Promise(r => setTimeout(r, 3000));
+            return tryGeminiRequest(userMessage, agent, modelIdx);
+        }
         hideTyping();
-        addMessage(agent.emoji, agent.name, `❌ Erro: ${err.message}`, 'agent');
+        addMessage(agent.emoji, agent.name, `❌ Erro de conexão. Verifique sua internet e tente novamente.`, 'agent');
     }
 }
 
@@ -380,22 +439,49 @@ function handleLocalResponse(userMessage) {
     const msg = userMessage.toLowerCase();
     let reply = '';
     setTimeout(() => {
-        if (msg.includes('olá') || msg.includes('oi') || msg.includes('ola')) {
-            reply = `Olá! 👋 Sou ${agent.name}, ${agent.role}. Como posso ajudar?`;
-        } else if (msg.includes('ajuda') || msg.includes('help')) {
-            reply = `Posso ajudar com:\n\n${agent.expertise.map(e => `• **${e}**`).join('\n')}`;
-        } else if (msg.includes('android') || msg.includes('apk')) {
-            reply = 'Para gerar APK:\n\n1️⃣ Cole código na aba **Build**\n2️⃣ Selecione **Android APK**\n3️⃣ Clique em **FORJAR APP** 📱';
-        } else if (msg.includes('windows') || msg.includes('exe')) {
-            reply = 'Para gerar .EXE:\n\n1️⃣ Cole código na aba **Build**\n2️⃣ Selecione **Windows Desktop**\n3️⃣ Clique em **FORJAR APP** 🖥️';
-        } else if (msg.includes('pwa') || msg.includes('web')) {
-            reply = 'PWA é a forma mais fácil!\n✅ Android, iOS e Windows\n✅ Instala do navegador\n✅ Funciona offline\n\nAba **Build** → **PWA** 🌐';
-        } else {
-            reply = `Configure a chave **Gemini** em ⚙️ para respostas inteligentes! É grátis: **aistudio.google.com** 🔑`;
+        // Saudações
+        if (msg.includes('olá') || msg.includes('oi') || msg.includes('ola') || msg.includes('hey') || msg.includes('eae') || msg.includes('salve')) {
+            reply = `Olá! 👋 Sou ${agent.name}, ${agent.role}. Estou no modo local agora, mas posso te ajudar com o básico!\n\nDigite **"ajuda"** pra ver os comandos disponíveis.`;
+        }
+        // Ajuda
+        else if (msg.includes('ajuda') || msg.includes('help') || msg.includes('comandos')) {
+            reply = `🔮 **Comandos disponíveis (modo local):**\n\n🔨 **"forjar"** — compilar código\n🔥 **"auto"** / **"faz tudo"** — piloto automático\n🔗 **"puxar codeforge"** — importar do CodeForge\n📥 **"download"** — baixar projeto\n🚀 **"deploy"** — publicar online\n📁 **"projetos"** — listar projetos\n📊 **"status"** — ver status\n\n💡 A IA completa volta em breve!`;
+        }
+        // Android
+        else if (msg.includes('android') || msg.includes('apk')) {
+            reply = '📱 **Criar APK para Android:**\n\n1️⃣ Cole seu código na aba **📦 Build**\n2️⃣ Selecione **Android APK**\n3️⃣ Clique em **FORJAR APP**\n4️⃣ Baixe o projeto\n5️⃣ Use **pwabuilder.com** pra gerar o APK\n\nOu digite **"forjar android"** que eu faço! 🔥';
+        }
+        // Windows
+        else if (msg.includes('windows') || msg.includes('exe') || msg.includes('desktop')) {
+            reply = '🖥️ **Criar .EXE para Windows:**\n\n1️⃣ Cole seu código na aba **📦 Build**\n2️⃣ Selecione **Windows Desktop**\n3️⃣ Clique em **FORJAR APP**\n4️⃣ Use **pwabuilder.com** pra gerar o pacote\n\nOu digite **"forjar windows"** que eu faço! 🔥';
+        }
+        // PWA
+        else if (msg.includes('pwa') || msg.includes('web') || msg.includes('site') || msg.includes('online')) {
+            reply = '🌐 **Criar PWA (funciona em tudo):**\n\n✅ Android, iOS e Windows\n✅ Instala do navegador\n✅ Funciona offline\n\n1️⃣ Cole código na aba **📦 Build**\n2️⃣ Selecione **PWA**\n3️⃣ **FORJAR APP**\n4️⃣ Deploy no GitHub Pages\n\nOu digite **"forjar pwa"**! 🔥';
+        }
+        // Criar/fazer algo
+        else if (msg.includes('criar') || msg.includes('fazer') || msg.includes('quero') || msg.includes('preciso') || msg.includes('desenvolver')) {
+            reply = `💡 Entendi que você quer criar algo!\n\nNo momento estou no modo local, mas posso:\n\n1️⃣ **Forjar código que você já tem** — cole na aba Build\n2️⃣ **Importar do CodeForge** — digite **"puxar codeforge"**\n3️⃣ **Build automático** — digite **"auto"**\n\nA IA completa volta em breve pra criar código do zero! ⏳`;
+        }
+        // Obrigado
+        else if (msg.includes('obrigado') || msg.includes('valeu') || msg.includes('thanks') || msg.includes('vlw')) {
+            reply = `De nada! 😊 Tô aqui pra isso. Se precisar de mais alguma coisa, é só chamar! 🔨🔥`;
+        }
+        // Tutorial
+        else if (msg.includes('tutorial') || msg.includes('como') || msg.includes('ensina') || msg.includes('aprend')) {
+            reply = `📚 **Tutoriais disponíveis:**\n\n🏠 O que é o VULCAN\n🔗 Importar do CodeForge\n🌐 Criar uma PWA\n📱 Gerar APK Android\n🖥️ Criar .EXE Windows\n🚀 Deploy no GitHub Pages\n⚡ Otimização\n🔑 Configurar APIs\n\nClique nos tutoriais na tela inicial! 📖`;
+        }
+        // Erro/problema
+        else if (msg.includes('erro') || msg.includes('bug') || msg.includes('problema') || msg.includes('não funciona')) {
+            reply = `🔧 **Checklist de solução:**\n\n1️⃣ Chave Gemini configurada? → ⚙️ Configurações\n2️⃣ Internet funcionando? → Teste abrindo outro site\n3️⃣ Cache limpo? → Ctrl+Shift+R\n4️⃣ Código válido? → Verifique na aba Build\n\nSe persistir, tente em 1 minuto — pode ser limite da API.`;
+        }
+        // Default
+        else {
+            reply = `Estou no **modo local** agora (IA Gemini em pausa temporária).\n\nMas posso executar comandos! Digite **"ajuda"** pra ver a lista.\n\nA IA completa volta em instantes ⏳`;
         }
         hideTyping();
         addMessage(agent.emoji, agent.name, reply, 'agent');
-    }, 1000);
+    }, 800);
 }
 
 // ===== BUILD =====
